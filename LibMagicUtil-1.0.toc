@@ -1,0 +1,12 @@
+## Interface: 30000
+## LoadOnDemand: 1
+## Title: Lib: MagicUtil-1.0
+## Notes: Utility library with shared functions and data for various addons by NeoTron. 
+## Author: NeoTron
+## eMail: neotron@gmail.com
+## Version: 1.0.@project-revision@
+## X-Category: Library
+## X-License: GPLv3
+
+LibStub.lua
+LibMagicUtil-1.0\lib.xml
