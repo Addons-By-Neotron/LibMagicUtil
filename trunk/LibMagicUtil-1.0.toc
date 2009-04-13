@@ -10,3 +10,4 @@
 
 LibStub.lua
 LibMagicUtil-1.0\lib.xml
+
