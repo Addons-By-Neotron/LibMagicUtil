@@ -10,5 +10,6 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
   <Script file="Locales\Locale-zhCN.lua"/>
   <Script file="Locales\Locale-zhTW.lua"/>
   <Script file="LibMagicUtil-1.0.lua"/>
+  <Script file="LibSimpleBar-1.0.lua"/>
 </Ui>
 
