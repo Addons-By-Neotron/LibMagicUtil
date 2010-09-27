@@ -1,4 +1,5 @@
 ## Interface: 30300
+## X-Compatible-With: 40000
 ## LoadOnDemand: 1
 ## Title: Lib: MagicUtil-1.0
 ## Notes: Utility library with shared functions and data for various addons by NeoTron. 
