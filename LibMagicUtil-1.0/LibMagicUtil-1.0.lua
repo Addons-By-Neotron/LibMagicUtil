@@ -212,7 +212,6 @@ optionTemplates.background = {
 	 set = "_SetColorOpt",
 	 get = "_GetColorOpt",
 	 order = 50,
-	 set = "_SetBackgroundOption", 
       },
       spacer2 = {
 	 type = "description",
