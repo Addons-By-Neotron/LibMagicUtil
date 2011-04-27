@@ -121,7 +121,6 @@ end
    
 function barPrototype:SetValue(value, maxValue)
    assert(value ~= nil, "Value cannot be nil!")
-
    self.value = value 
    self.maxValue = maxValue or self.maxValue
 
