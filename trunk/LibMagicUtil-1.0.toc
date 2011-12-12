@@ -1,5 +1,5 @@
-## Interface: 40200
-## X-Compatible-With: 40200
+## Interface: 40300
+## X-Compatible-With: 40300
 ## LoadOnDemand: 1
 ## Title: Lib: MagicUtil-1.0
 ## Notes: Utility library with shared functions and data for various addons by NeoTron. 
