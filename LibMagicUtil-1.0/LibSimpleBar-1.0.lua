@@ -128,7 +128,10 @@ function barPrototype:SetValue(value, maxValue)
       self.maxValue = value
    end
 
-   local amt = min(1, value / self.maxValue)
+   local amt = 0
+   if self.maxValue > 0 then
+      amt = min(1, value / self.maxValue)
+   end
 
    if amt == 1 or amt == 0 then
       self.spark:Hide()
