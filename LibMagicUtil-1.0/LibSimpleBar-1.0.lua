@@ -27,7 +27,7 @@ along with MagicTargets.  If not, see <http://www.gnu.org/licenses/>.
 -- Snippets used with permission from Antiarc, the LibBars-1.0 author
 
 local MAJOR = "LibSimpleBar-1.0"
-local MINOR = tonumber(("$Revision$"):match("(%d+)")) 
+local MINOR = "80200"
 
 local lib = LibStub:NewLibrary(MAJOR, MINOR)
 
