@@ -1,5 +1,8 @@
-## Interface: 90002
-## X-Compatible-With: 70000
+## Interface: 90005
+## Interface-Classic: 11306
+## Interface-BCC: 20501
+## Interface-Retail: 90005
+## X-Curse-Project-ID: 18625
 ## LoadOnDemand: 1
 ## Title: Lib: MagicUtil-1.0
 ## Notes: Utility library with shared functions and data for various addons by NeoTron. 
