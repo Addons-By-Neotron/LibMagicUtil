@@ -1,9 +1,5 @@
-local debug = false
---@debug@
-debug = true
---@end-debug@
 
-local L = LibStub("AceLocale-3.0"):NewLocale("LibMagicUtil-1.0", "enUS", true, not debug)
+local L = LibStub("AceLocale-3.0"):NewLocale("LibMagicUtil-1.0", "enUS", true)
 
 L["Background Color"] = true
 L["Background Frame"] = true
