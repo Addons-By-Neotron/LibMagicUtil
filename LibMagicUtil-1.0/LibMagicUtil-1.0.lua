@@ -24,7 +24,7 @@ After embedding you will be able to use the following methods:
 ]]
 
 local MAJOR = "LibMagicUtil-1.0"
-local MINOR = "20240724"
+local MINOR = 2024072401
 
 local lib = LibStub:NewLibrary(MAJOR, MINOR)
 local media = LibStub("LibSharedMedia-3.0")
@@ -34,7 +34,8 @@ if not lib then return end
 
 local embeddables = {
    "GetConfigTemplate", "_GetColorOpt", "_SetColorOpt", "_SetOption", "_GetOption",
-   "_HideOption", "_DisableTiling", "FixBackdrop", "_SetBackgroundOption" 
+   "_HideOption", "_DisableTiling", "FixBackdrop", "_SetBackgroundOption",
+   "InterfaceOptions_AddCategory", "InterfaceOptionsFrame_OpenToCategory"
 }
 
 lib.optionTemplates = lib.optionTemplates or {}
@@ -176,6 +177,43 @@ function lib:Dump(o)
     else
         return tostring(o)
     end
+end
+
+
+
+function lib:InterfaceOptions_AddCategory(frame, addOn, position)
+    if InterfaceOptions_AddCategory then
+        return InterfaceOptions_AddCategory(frame, addon, position)
+    end
+	-- cancel is no longer a default option. May add menu extension for this.
+	frame.OnCommit = frame.okay;
+	frame.OnDefault = frame.default;
+	frame.OnRefresh = frame.refresh;
+
+	if frame.parent then
+		local category = Settings.GetCategory(frame.parent);
+		local subcategory, layout = Settings.RegisterCanvasLayoutSubcategory(category, frame, frame.name, frame.name);
+		subcategory.ID = frame.name;
+		return subcategory, category;
+	else
+		local category, layout = Settings.RegisterCanvasLayoutCategory(frame, frame.name, frame.name);
+		category.ID = frame.name;
+		Settings.RegisterAddOnCategory(category);
+		return category;
+	end
+end
+
+-- Deprecated. Use Settings.OpenToCategory().
+function lib:InterfaceOptionsFrame_OpenToCategory(categoryIDOrFrame)
+    if InterfaceOptionsFrame_OpenToCategory then
+        return InterfaceOptionsFrame_OpenToCategory(categoryIDOrFrame)
+    end
+	if type(categoryIDOrFrame) == "table" then
+		local categoryID = categoryIDOrFrame.name;
+		return Settings.OpenToCategory(categoryID);
+	else
+		return Settings.OpenToCategory(categoryIDOrFrame);
+	end
 end
 
 -- Config template for a frame background
