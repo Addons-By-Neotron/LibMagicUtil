@@ -24,7 +24,7 @@ After embedding you will be able to use the following methods:
 ]]
 
 local MAJOR = "LibMagicUtil-1.0"
-local MINOR = 2024072401
+local MINOR = 2024081801
 
 local lib = LibStub:NewLibrary(MAJOR, MINOR)
 local media = LibStub("LibSharedMedia-3.0")
@@ -35,7 +35,7 @@ if not lib then return end
 local embeddables = {
    "GetConfigTemplate", "_GetColorOpt", "_SetColorOpt", "_SetOption", "_GetOption",
    "_HideOption", "_DisableTiling", "FixBackdrop", "_SetBackgroundOption",
-   "InterfaceOptions_AddCategory", "InterfaceOptionsFrame_OpenToCategory"
+   "InterfaceOptions_AddCategory", "InterfaceOptionsFrame_OpenToCategory", "Dump"
 }
 
 lib.optionTemplates = lib.optionTemplates or {}
@@ -171,13 +171,14 @@ function lib:Dump(o)
         local s = '{ '
         for k,v in pairs(o) do
             if type(k) ~= 'number' then k = '"'..k..'"' end
-            s = s .. '['..k..'] = ' .. dump(v) .. ','
+            s = s .. '['..k..'] = ' .. lib:Dump(v) .. ','
         end
         return s .. '} '
     else
         return tostring(o)
     end
 end
+
 
 
 
@@ -191,12 +192,12 @@ function lib:InterfaceOptions_AddCategory(frame, addOn, position)
 	frame.OnRefresh = frame.refresh;
 
 	if frame.parent then
-		local category = Settings.GetCategory(frame.parent);
-		local subcategory, layout = Settings.RegisterCanvasLayoutSubcategory(category, frame, frame.name, frame.name);
+		local category = Settings.GetCategory(frame.parent)
+		local subcategory = Settings.RegisterCanvasLayoutSubcategory(category, frame, frame.name, frame.name)
 		subcategory.ID = frame.name;
 		return subcategory, category;
 	else
-		local category, layout = Settings.RegisterCanvasLayoutCategory(frame, frame.name, frame.name);
+		local category = Settings.RegisterCanvasLayoutCategory(frame, frame.name, frame.name);
 		category.ID = frame.name;
 		Settings.RegisterAddOnCategory(category);
 		return category;
