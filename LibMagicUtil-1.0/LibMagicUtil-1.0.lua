@@ -24,7 +24,7 @@ After embedding you will be able to use the following methods:
 ]]
 
 local MAJOR = "LibMagicUtil-1.0"
-local MINOR = 2024081801
+local MINOR = 2024081802
 
 local lib = LibStub:NewLibrary(MAJOR, MINOR)
 local media = LibStub("LibSharedMedia-3.0")
@@ -35,7 +35,8 @@ if not lib then return end
 local embeddables = {
    "GetConfigTemplate", "_GetColorOpt", "_SetColorOpt", "_SetOption", "_GetOption",
    "_HideOption", "_DisableTiling", "FixBackdrop", "_SetBackgroundOption",
-   "InterfaceOptions_AddCategory", "InterfaceOptionsFrame_OpenToCategory", "Dump"
+   "InterfaceOptions_AddCategory", "InterfaceOptionsFrame_OpenToCategory", "Dump",
+   "GetSpellInfo"
 }
 
 lib.optionTemplates = lib.optionTemplates or {}
@@ -43,6 +44,17 @@ lib.embeddedAddons = lib.embeddedAddons or {}
 
 local optionTemplates = lib.optionTemplates
 local embeddedAddons = lib.embeddedAddons
+
+lib.GetSpellInfo = GetSpellInfo or function(id)
+    local spellInfo = C_Spell.GetSpellInfo(id)
+    if spellInfo then
+        -- Returning the values in the same order as the original GetSpellInfo
+        return spellInfo.name, nil, spellInfo.iconID, spellInfo.castTime, spellInfo.minRange, spellInfo.maxRange, spellInfo.spellID, spellInfo.originalIconID
+    else
+        -- If the spell is not found, return nil
+        return nil
+    end
+end
 
 function lib:GetConfigTemplate(config, get, set)
    assert(self ~= lib, "GetConfigTemplate can only be called when embedded.")
