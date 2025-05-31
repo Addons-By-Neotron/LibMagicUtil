@@ -24,7 +24,7 @@ After embedding you will be able to use the following methods:
 ]]
 
 local MAJOR = "LibMagicUtil-1.0"
-local MINOR = 2024081802
+local MINOR = 2025053101
 
 local lib = LibStub:NewLibrary(MAJOR, MINOR)
 local media = LibStub("LibSharedMedia-3.0")
@@ -36,7 +36,7 @@ local embeddables = {
    "GetConfigTemplate", "_GetColorOpt", "_SetColorOpt", "_SetOption", "_GetOption",
    "_HideOption", "_DisableTiling", "FixBackdrop", "_SetBackgroundOption",
    "InterfaceOptions_AddCategory", "InterfaceOptionsFrame_OpenToCategory", "Dump",
-   "GetSpellInfo"
+   "GetSpellInfo", "UnitAura"
 }
 
 lib.optionTemplates = lib.optionTemplates or {}
@@ -55,6 +55,33 @@ lib.GetSpellInfo = GetSpellInfo or function(id)
         return nil
     end
 end
+
+lib.UnitAura = UnitAura or function(unit, index, filter)
+    local aura = C_UnitAuras and C_UnitAuras.GetAuraDataByIndex(unit, index)
+    if not aura then return nil end
+
+    -- Map new API fields to old UnitAura return values
+    local name = aura.name
+    local icon = aura.icon
+    local count = aura.applications or 1
+    local debuffType = aura.dispelName
+    local duration = aura.duration
+    local expirationTime = aura.expirationTime
+    local caster = aura.sourceUnit
+    local isStealable = aura.isStealable
+    local nameplateShowPersonal = aura.nameplateShowPersonal
+    local spellId = aura.spellId
+    local canApplyAura = aura.canApplyAura
+    local isBossDebuff = aura.isBossDebuff
+    local isCastByPlayer = aura.isFromPlayerOrPlayerPet
+    local nameplateShowAll = aura.nameplateShowAll
+    local timeMod = aura.timeMod or 1
+    local value1, value2, value3 = aura.points or 0, nil, nil
+
+    return name, icon, count, debuffType, duration, expirationTime, caster,
+           isStealable, nameplateShowPersonal, spellId, canApplyAura, isBossDebuff,
+           isCastByPlayer, nameplateShowAll, timeMod, value1, value2, value3
+  end
 
 function lib:GetConfigTemplate(config, get, set)
    assert(self ~= lib, "GetConfigTemplate can only be called when embedded.")
