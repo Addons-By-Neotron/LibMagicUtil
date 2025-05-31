@@ -1,7 +1,7 @@
-## Interface: 110002
+## Interface: 110105
 ## Interface-Classic: 11501
 ## Interface-BCC: 20504
-## Interface-Cata: 40400
+## Interface-Cata: 40402
 ## X-Curse-Project-ID: 18625
 ## LoadOnDemand: 1
 ## Title: Lib: MagicUtil-1.0
