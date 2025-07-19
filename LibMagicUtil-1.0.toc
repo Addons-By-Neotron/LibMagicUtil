@@ -2,13 +2,14 @@
 ## Interface-Classic: 11501
 ## Interface-BCC: 20504
 ## Interface-Cata: 40402
+## Interface-Mists: 50500
 ## X-Curse-Project-ID: 18625
 ## LoadOnDemand: 1
 ## Title: Lib: MagicUtil-1.0
 ## Notes: Utility library with shared functions and data for various addons by NeoTron. 
 ## Author: NeoTron
 ## eMail: neotron@gmail.com
-## Version: 1.0.@project-revision@
+## Version: 1.0.@project-date-integer@
 ## X-Category: Library
 ## X-License: GPLv3
 
