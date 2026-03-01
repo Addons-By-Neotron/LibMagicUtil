@@ -36,7 +36,7 @@ local embeddables = {
    "GetConfigTemplate", "_GetColorOpt", "_SetColorOpt", "_SetOption", "_GetOption",
    "_HideOption", "_DisableTiling", "FixBackdrop", "_SetBackgroundOption",
    "InterfaceOptions_AddCategory", "InterfaceOptionsFrame_OpenToCategory", "Dump",
-   "GetSpellInfo", "UnitAura"
+   "GetSpellInfo", "UnitAura", "GetMailFrame"
 }
 
 lib.optionTemplates = lib.optionTemplates or {}
@@ -254,6 +254,21 @@ function lib:InterfaceOptionsFrame_OpenToCategory(categoryIDOrFrame)
 	else
 		return Settings.OpenToCategory(categoryIDOrFrame);
 	end
+end
+
+-- Returns the currently visible mail frame. Checks for TSM's mail frame first
+-- (which replaces the default MailFrame), then falls back to the default MailFrame.
+function lib:GetMailFrame()
+   for i = 1, #UISpecialFrames do
+      local name = UISpecialFrames[i]
+      if name:match("^TSM_FRAME:LargeApplicationFrame:") then
+         local frame = _G[name]
+         if frame and frame:IsShown() then
+            return frame
+         end
+      end
+   end
+   return MailFrame
 end
 
 -- Config template for a frame background
