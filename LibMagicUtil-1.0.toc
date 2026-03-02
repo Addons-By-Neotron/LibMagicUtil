@@ -1,4 +1,4 @@
-Lib## Interface: 120001, 50503, 38000, 20505, 11508
+## Interface: 120001, 50503, 38000, 20505, 11508
 ## X-Curse-Project-ID: 18625
 ## LoadOnDemand: 1
 ## Title: Lib: MagicUtil-1.0
@@ -10,5 +10,6 @@ Lib## Interface: 120001, 50503, 38000, 20505, 11508
 ## X-License: GPLv3
 
 LibStub.lua
+bootstrap.lua
 LibMagicUtil-1.0\lib.xml
 

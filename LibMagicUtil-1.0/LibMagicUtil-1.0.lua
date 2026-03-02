@@ -25,7 +25,12 @@ After embedding you will be able to use the following methods:
 
 local MAJOR = "LibMagicUtil-1.0"
 local MINOR = tonumber("@project-date-integer@") or tonumber(date("%Y%m%d%H%M%S"))
-
+-- Standalone addon sets this flag via bootstrap.lua (loaded from .toc before lib.xml).
+-- Embedded copies don't run bootstrap.lua, so the flag is nil for them.
+-- Bumping MINOR ensures the standalone copy always wins over embedded copies.
+if LIBMAGICUTIL_STANDALONE then
+    MINOR = MINOR + 1
+end
 local lib = LibStub:NewLibrary(MAJOR, MINOR)
 local media = LibStub("LibSharedMedia-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("LibMagicUtil-1.0", false)
@@ -256,19 +261,42 @@ function lib:InterfaceOptionsFrame_OpenToCategory(categoryIDOrFrame)
 	end
 end
 
--- Returns the currently visible mail frame. Checks for TSM's mail frame first
--- (which replaces the default MailFrame), then falls back to the default MailFrame.
+-- Returns the active mail frame and whether it's TSM.
+-- Second return value is true if the returned frame is TSM's mail frame.
+-- Finds TSM's mail window by looking for the MailsScrollTable element
+-- (unique to TSM's mail UI) and walking up to the top-level parent.
+local cachedTSMMailFrame
+local function FindTSMMailFrame()
+    if cachedTSMMailFrame then
+        return cachedTSMMailFrame
+    end
+    -- Find MailsScrollTable, then walk up to the LargeApplicationFrame
+    local frame = EnumerateFrames()
+    while frame do
+        local name = frame:GetName()
+        if name and type(name) == "string" and name:match("^TSM_FRAME:MailsScrollTable:") then
+            -- Walk up the parent chain to find the top-level TSM frame
+            local parent = frame:GetParent()
+            while parent and parent ~= UIParent do
+                local parentName = parent:GetName()
+                if parentName and type(parentName) == "string" and parentName:match("^TSM_FRAME:LargeApplicationFrame:") then
+                    cachedTSMMailFrame = parent
+                    return parent
+                end
+                parent = parent:GetParent()
+            end
+        end
+        frame = EnumerateFrames(frame)
+    end
+    return nil
+end
+
 function lib:GetMailFrame()
-   for i = 1, #UISpecialFrames do
-      local name = UISpecialFrames[i]
-      if name:match("^TSM_FRAME:LargeApplicationFrame:") then
-         local frame = _G[name]
-         if frame and frame:IsShown() then
-            return frame
-         end
-      end
-   end
-   return MailFrame
+    local tsmFrame = FindTSMMailFrame()
+    if tsmFrame and tsmFrame:IsShown() then
+        return tsmFrame, true
+    end
+    return MailFrame, false
 end
 
 -- Config template for a frame background
