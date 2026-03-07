@@ -271,7 +271,7 @@ local function FindTSMMailFrame()
     if cachedTSMMailFrame then
         return cachedTSMMailFrame
     end
-    -- Only scan once; if TSM frame wasn't found, it won't appear mid-session
+    -- Already scanned this mailbox session and didn't find it
     if tsmScanComplete then
         return nil
     end
@@ -296,6 +296,14 @@ local function FindTSMMailFrame()
     end
     tsmScanComplete = true
     return nil
+end
+
+-- Reset the negative scan cache so the next GetMailFrame call re-scans.
+-- Call this when the mailbox opens, giving TSM a chance to create its frame.
+function lib:ResetTSMFrameCache()
+    if not cachedTSMMailFrame then
+        tsmScanComplete = false
+    end
 end
 
 function lib:GetMailFrame()
