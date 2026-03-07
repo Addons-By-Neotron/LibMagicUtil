@@ -8,8 +8,12 @@
 ## Version: 1.0.@project-date-integer@
 ## X-Category: Library
 ## X-License: GPLv3
+## OptionalDeps: Ace3, LibSharedMedia-3.0, AceGUI-3.0-SharedMediaWidgets
 
 LibStub.lua
+#@no-lib-strip@
+embeds.xml
+#@end-no-lib-strip@
 bootstrap.lua
 LibMagicUtil-1.0\lib.xml
 
