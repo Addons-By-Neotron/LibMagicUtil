@@ -266,9 +266,14 @@ end
 -- Finds TSM's mail window by looking for the MailsScrollTable element
 -- (unique to TSM's mail UI) and walking up to the top-level parent.
 local cachedTSMMailFrame
+local tsmScanComplete = false
 local function FindTSMMailFrame()
     if cachedTSMMailFrame then
         return cachedTSMMailFrame
+    end
+    -- Only scan once; if TSM frame wasn't found, it won't appear mid-session
+    if tsmScanComplete then
+        return nil
     end
     -- Find MailsScrollTable, then walk up to the LargeApplicationFrame
     local frame = EnumerateFrames()
@@ -281,6 +286,7 @@ local function FindTSMMailFrame()
                 local parentName = parent:GetName()
                 if parentName and type(parentName) == "string" and parentName:match("^TSM_FRAME:LargeApplicationFrame:") then
                     cachedTSMMailFrame = parent
+                    tsmScanComplete = true
                     return parent
                 end
                 parent = parent:GetParent()
@@ -288,6 +294,7 @@ local function FindTSMMailFrame()
         end
         frame = EnumerateFrames(frame)
     end
+    tsmScanComplete = true
     return nil
 end
 
