@@ -1,4 +1,4 @@
-local L = LibStub("AceLocale-3.0"):NewLocthis aale("LibMagicUtil-1.0", "enUS", true, true)
+local L = LibStub("AceLocale-3.0"):NewLocale("LibMagicUtil-1.0", "enUS", true, true)
 
 L["Background Color"] = true
 L["Background Frame"] = true
