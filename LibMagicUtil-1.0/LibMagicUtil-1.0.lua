@@ -88,6 +88,141 @@ lib.UnitAura = UnitAura or function(unit, index, filter)
            isCastByPlayer, nameplateShowAll, timeMod, value1, value2, value3
   end
 
+------------------------------------------------------------------------
+-- Reputation API compat
+-- Provides modern C_Reputation-style table APIs on all WoW versions.
+-- On retail (11.0+), these are thin pass-throughs.
+-- On classic/TBC/MoP, they wrap old tuple-returning globals.
+------------------------------------------------------------------------
+
+lib.Reputation = {}
+local Rep = lib.Reputation
+
+if C_Reputation and C_Reputation.GetFactionDataByIndex then
+    -- Retail 11.0+: modern APIs exist natively
+    Rep.GetFactionDataByIndex = C_Reputation.GetFactionDataByIndex
+    Rep.GetFactionDataByID = C_Reputation.GetFactionDataByID
+    Rep.GetNumFactions = C_Reputation.GetNumFactions
+    Rep.ExpandFactionHeader = C_Reputation.ExpandFactionHeader
+    Rep.CollapseFactionHeader = C_Reputation.CollapseFactionHeader
+    Rep.IsFactionActive = C_Reputation.IsFactionActive
+    Rep.SetFactionActive = C_Reputation.SetFactionActive
+    -- 12.0: IsFactionParagon changed meaning. IsFactionParagonForCurrentPlayer
+    -- is "player is at paragon", IsFactionParagon is "faction supports paragon".
+    Rep.IsFactionParagon = C_Reputation.IsFactionParagonForCurrentPlayer or C_Reputation.IsFactionParagon
+    Rep.GetFactionParagonInfo = C_Reputation.GetFactionParagonInfo
+    Rep.IsMajorFaction = C_Reputation.IsMajorFaction
+    Rep.IsAccountWideReputation = C_Reputation.IsAccountWideReputation
+else
+    -- Classic/TBC/MoP: wrap old globals into modern table format
+    Rep.GetNumFactions = GetNumFactions or function() return 0 end
+
+    Rep.GetFactionDataByIndex = function(factionIndex)
+        if not factionIndex or not GetFactionInfo then return nil end
+        local name, description, standingId, barMin, barMax, barValue,
+              atWarWith, canToggleAtWar, isHeader, isCollapsed,
+              hasRep, isWatched, isChild, factionID,
+              hasBonusRepGain, canSetInactive = GetFactionInfo(factionIndex)
+        if not name then return nil end
+        return {
+            factionID = factionID,
+            name = name,
+            description = description,
+            reaction = standingId,
+            currentReactionThreshold = barMin,
+            nextReactionThreshold = barMax,
+            currentStanding = barValue,
+            atWarWith = atWarWith,
+            canToggleAtWar = canToggleAtWar,
+            isHeader = isHeader,
+            isCollapsed = isCollapsed,
+            isHeaderWithRep = hasRep,
+            isWatched = isWatched,
+            isChild = isChild,
+            hasBonusRepGain = hasBonusRepGain,
+            canSetInactive = canSetInactive,
+            isAccountWide = false,
+        }
+    end
+
+    -- Classic doesn't have GetFactionDataByID; return nil
+    Rep.GetFactionDataByID = function(factionID)
+        return nil
+    end
+
+    Rep.ExpandFactionHeader = ExpandFactionHeader or function() end
+    Rep.CollapseFactionHeader = CollapseFactionHeader or function() end
+
+    Rep.IsFactionActive = function(factionIndex)
+        if IsFactionInactive then
+            return not IsFactionInactive(factionIndex)
+        end
+        return true
+    end
+
+    Rep.SetFactionActive = function(factionIndex, setActive)
+        if setActive then
+            if SetFactionActive then SetFactionActive(factionIndex) end
+        else
+            if SetFactionInactive then SetFactionInactive(factionIndex) end
+        end
+    end
+
+    -- No paragon/major faction on classic
+    Rep.IsFactionParagon = function() return false end
+    Rep.GetFactionParagonInfo = function() return nil end
+    Rep.IsMajorFaction = function() return false end
+    Rep.IsAccountWideReputation = function() return false end
+end
+
+-- Friendship reputation: C_GossipInfo on retail, global on classic
+if C_GossipInfo and C_GossipInfo.GetFriendshipReputation then
+    Rep.GetFriendshipReputation = function(factionID)
+        if not factionID then return nil end
+        local rep = C_GossipInfo.GetFriendshipReputation(factionID)
+        if not rep or rep.friendshipFactionID == 0 then return nil end
+        return rep
+    end
+else
+    Rep.GetFriendshipReputation = function(factionID)
+        if not factionID or not GetFriendshipReputation then return nil end
+        local friendshipFactionID, standing, maxRep, name, text,
+              texture, reaction, reactionThreshold, nextThreshold,
+              reversedColor, overrideColor = GetFriendshipReputation(factionID)
+        if not friendshipFactionID or friendshipFactionID == 0 then return nil end
+        return {
+            friendshipFactionID = friendshipFactionID,
+            standing = standing,
+            maxRep = maxRep,
+            name = name,
+            text = text,
+            texture = texture,
+            reaction = reaction,
+            reactionThreshold = reactionThreshold,
+            nextThreshold = nextThreshold,
+            reversedColor = reversedColor,
+            overrideColor = overrideColor,
+        }
+    end
+end
+
+if C_GossipInfo and C_GossipInfo.GetFriendshipReputationRanks then
+    Rep.GetFriendshipReputationRanks = function(factionID)
+        if not factionID then return nil end
+        return C_GossipInfo.GetFriendshipReputationRanks(factionID)
+    end
+else
+    Rep.GetFriendshipReputationRanks = function(factionID)
+        if not factionID or not GetFriendshipReputationRanks then return nil end
+        local currentLevel, maxLevel = GetFriendshipReputationRanks(factionID)
+        if not currentLevel then return nil end
+        return {
+            currentLevel = currentLevel,
+            maxLevel = maxLevel,
+        }
+    end
+end
+
 function lib:GetConfigTemplate(config, get, set)
    assert(self ~= lib, "GetConfigTemplate can only be called when embedded.")
    assert(optionTemplates[config] ~= nil, "Unknown config template: "..config)
