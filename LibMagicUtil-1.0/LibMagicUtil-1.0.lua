@@ -385,6 +385,9 @@ end
 
 -- Deprecated. Use Settings.OpenToCategory().
 function lib:InterfaceOptionsFrame_OpenToCategory(categoryIDOrFrame)
+    if InCombatLockdown() then
+        return
+    end
     if InterfaceOptionsFrame_OpenToCategory then
         return InterfaceOptionsFrame_OpenToCategory(categoryIDOrFrame)
     end
