@@ -416,11 +416,13 @@ local function FindTSMMailFrame()
     -- Find MailsScrollTable, then walk up to the LargeApplicationFrame
     local frame = EnumerateFrames()
     while frame do
-        local name = frame:GetName()
+        -- Forbidden frames (e.g. Blizzard aura buttons) error on any method
+        -- call from addon code except IsForbidden.
+        local name = not frame:IsForbidden() and frame:GetName()
         if name and type(name) == "string" and name:match("^TSM_FRAME:MailsScrollTable:") then
             -- Walk up the parent chain to find the top-level TSM frame
             local parent = frame:GetParent()
-            while parent and parent ~= UIParent do
+            while parent and parent ~= UIParent and not parent:IsForbidden() do
                 local parentName = parent:GetName()
                 if parentName and type(parentName) == "string" and parentName:match("^TSM_FRAME:LargeApplicationFrame:") then
                     cachedTSMMailFrame = parent
