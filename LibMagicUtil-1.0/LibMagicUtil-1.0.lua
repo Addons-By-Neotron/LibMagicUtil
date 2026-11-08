@@ -24,12 +24,16 @@ After embedding you will be able to use the following methods:
 ]]
 
 local MAJOR = "LibMagicUtil-1.0"
-local MINOR = tonumber("@project-date-integer@") or tonumber(date("%Y%m%d%H%M%S"))
+local packagedMinor = tonumber("@project-date-integer@")
+local MINOR = packagedMinor or tonumber(date("%Y%m%d%H%M%S"))
 -- Standalone addon sets this flag via bootstrap.lua (loaded from .toc before lib.xml).
 -- Embedded copies don't run bootstrap.lua, so the flag is nil for them.
 -- Bumping MINOR ensures the standalone copy always wins over embedded copies.
 if LIBMAGICUTIL_STANDALONE then
-    MINOR = MINOR + 1
+    -- In a dev checkout the placeholder isn't replaced and MINOR is the load
+    -- time, so embedded copies loaded later (even by a second) would win.
+    -- Add a year (the YYYY digits are the 1e10 place) so the standalone always wins.
+    MINOR = MINOR + (packagedMinor and 1 or 10000000000)
 end
 local lib = LibStub:NewLibrary(MAJOR, MINOR)
 local media = LibStub("LibSharedMedia-3.0")
@@ -405,51 +409,127 @@ end
 -- (unique to TSM's mail UI) and walking up to the top-level parent.
 local cachedTSMMailFrame
 local tsmScanComplete = false
-local function FindTSMMailFrame()
-    if cachedTSMMailFrame then
-        return cachedTSMMailFrame
+local lastTSMScan = 0
+
+local function AtMailbox()
+    if C_PlayerInteractionManager and C_PlayerInteractionManager.IsInteractingWithNpcOfType
+        and Enum and Enum.PlayerInteractionType then
+        local ok, r = pcall(C_PlayerInteractionManager.IsInteractingWithNpcOfType, Enum.PlayerInteractionType.MailInfo)
+        if ok and r then return true end
     end
-    -- Already scanned this mailbox session and didn't find it
-    if tsmScanComplete then
-        return nil
+    local ok, shown = pcall(function() return MailFrame and MailFrame:IsShown() and true or false end)
+    return ok and shown
+end
+
+local function IsTSMMailingVisible()
+    if TSM_API and TSM_API.IsUIVisible then
+        local ok, visible = pcall(TSM_API.IsUIVisible, "MAILING")
+        if ok and visible == true then
+            return true
+        end
     end
-    -- Find MailsScrollTable, then walk up to the LargeApplicationFrame
-    local frame = EnumerateFrames()
-    while frame do
-        -- Forbidden frames (e.g. Blizzard aura buttons) error on any method
-        -- call from addon code except IsForbidden.
-        local name = not frame:IsForbidden() and frame:GetName()
-        if name and type(name) == "string" and name:match("^TSM_FRAME:MailsScrollTable:") then
-            -- Walk up the parent chain to find the top-level TSM frame
+    return false
+end
+
+-- Release builds of TSM don't name their frames (names are dev/test only), so
+-- first try the named lookup, then fall back to finding TSM's top-level
+-- application frame: every TSM widget carries a "__debug" table, and the
+-- application frame is the large shown child of UIParent.
+-- Examine one frame. Returns "named", "tsm" or "loose" (see ScanForTSMFrame),
+-- or nil. Runs under pcall: some frames return secret values that error when
+-- tested from addon code.
+local function ClassifyFrame(frame)
+    if frame:IsForbidden() then return nil end
+    local name = frame:GetName()
+    if name and type(name) == "string" then
+        if name:match("^TSM_FRAME:MailsScrollTable:") then
             local parent = frame:GetParent()
             while parent and parent ~= UIParent and not parent:IsForbidden() do
                 local parentName = parent:GetName()
                 if parentName and type(parentName) == "string" and parentName:match("^TSM_FRAME:LargeApplicationFrame:") then
-                    cachedTSMMailFrame = parent
-                    tsmScanComplete = true
-                    return parent
+                    return "named", parent
                 end
                 parent = parent:GetParent()
             end
         end
-        frame = EnumerateFrames(frame)
+        return nil
     end
-    tsmScanComplete = true
+    if frame:GetParent() == UIParent and frame:IsShown() then
+        local w, h = frame:GetWidth() or 0, frame:GetHeight() or 0
+        if w >= 300 and h >= 200 then
+            return frame.__debug and "tsm" or "loose", frame
+        end
+    end
     return nil
 end
 
--- Reset the negative scan cache so the next GetMailFrame call re-scans.
--- Call this when the mailbox opens, giving TSM a chance to create its frame.
-function lib:ResetTSMFrameCache()
-    if not cachedTSMMailFrame then
-        tsmScanComplete = false
+local function ScanForTSMFrame()
+    local fallback, loose
+    local frame = EnumerateFrames()
+    while frame do
+        local ok, kind, found = pcall(ClassifyFrame, frame)
+        if ok and kind then
+            if kind == "named" then
+                return found
+            elseif kind == "tsm" then
+                fallback = fallback or found
+            else
+                loose = loose or found
+            end
+        end
+        frame = EnumerateFrames(frame)
     end
+    return fallback or loose
+end
+
+local function FindTSMMailFrame()
+    -- TSM tells us whether its mailing UI is showing. If that call is
+    -- unavailable or unreliable, infer it: at the mailbox with the default
+    -- MailFrame hidden and a TSM application frame on screen.
+    local tsmVisible = IsTSMMailingVisible()
+    if not tsmVisible and AtMailbox() then
+        local okShown, mfShown = pcall(function() return MailFrame and MailFrame:IsShown() and true or false end)
+        if okShown and not mfShown then
+            if not (cachedTSMMailFrame and cachedTSMMailFrame:IsShown()) then
+                local now = GetTime()
+                if now - lastTSMScan >= 1 then
+                    lastTSMScan = now
+                    local f = ScanForTSMFrame()
+                    cachedTSMMailFrame = f
+                end
+            end
+            if cachedTSMMailFrame and cachedTSMMailFrame:IsShown() and cachedTSMMailFrame.__debug then
+                return cachedTSMMailFrame, true
+            end
+        end
+    end
+    if not tsmVisible then
+        cachedTSMMailFrame = nil
+        return nil, false
+    end
+    if cachedTSMMailFrame and cachedTSMMailFrame:IsShown() then
+        return cachedTSMMailFrame, true
+    end
+    local now = GetTime()
+    if now - lastTSMScan >= 1 then
+        lastTSMScan = now
+        cachedTSMMailFrame = ScanForTSMFrame()
+    end
+    return cachedTSMMailFrame, true
+end
+
+-- Kept for API compatibility; detection no longer relies on a one-shot scan.
+function lib:ResetTSMFrameCache()
+    tsmScanComplete = false
+    lastTSMScan = 0
 end
 
 function lib:GetMailFrame()
-    local tsmFrame = FindTSMMailFrame()
-    if tsmFrame and tsmFrame:IsShown() then
-        return tsmFrame, true
+    local tsmFrame, tsmVisible = FindTSMMailFrame()
+    if tsmVisible then
+        -- If the frame couldn't be located, fall back to the (hidden) default
+        -- MailFrame for anchoring but still report TSM as active.
+        return tsmFrame or MailFrame, true
     end
     return MailFrame, false
 end
