@@ -1,39 +1,24 @@
 local L = LibStub("AceLocale-3.0"):NewLocale("LibMagicUtil-1.0", "zhCN")
 if not L then return end
 
--- To help localize LibMagicUtil-1.0 please enter phrase translations on the
--- following URL:
--- http://www.wowace.com/projects/libmagicutil-10/localization/
--- Exported localization is committed so parent addon packagers cannot replace it.
-
 L["Background Color"] = "背景颜色"
 L["Background Frame"] = "背景框体"
 L["Background Texture"] = "背景材质"
---[[Translation missing --]]
-L["Bar Height"] = "Bar Height"
---[[Translation missing --]]
-L["Bar Scale"] = "Bar Scale"
---[[Translation missing --]]
-L["Bar Size"] = "Bar Size"
---[[Translation missing --]]
-L["Bar Spacing"] = "Bar Spacing"
---[[Translation missing --]]
-L["Bar Width"] = "Bar Width"
+L["Bar Height"] = "条高度"
+L["Bar Scale"] = "条缩放"
+L["Bar Size"] = "条大小"
+L["Bar Spacing"] = "条间距"
+L["Bar Width"] = "条宽度"
 L["Border color"] = "边框颜色"
-L["Border Texture"] = "背景材质"
+L["Border Texture"] = "边框材质"
 L["Edge size"] = "边角大小"
---[[Translation missing --]]
-L["Maximum number of bars"] = "Maximum number of bars"
---[[Translation missing --]]
-L["Number of pixels to insert between the background frame edge and the content."] = "Number of pixels to insert between the background frame edge and the content."
+L["Maximum number of bars"] = "条的最大数量"
+L["Number of pixels to insert between the background frame edge and the content."] = "背景框体边缘与内容之间插入的像素数."
 L["Padding"] = "间距"
---[[Translation missing --]]
-L["The background texture used for the background frame."] = "The background texture used for the background frame."
---[[Translation missing --]]
-L["The border texture used for the background frame."] = "The border texture used for the background frame."
+L["The background texture used for the background frame."] = "背景框体所使用的背景材质."
+L["The border texture used for the background frame."] = "背景框体所使用的边框材质."
 L["The size in pixels of the background tiles."] = "背景色块像素的大小."
---[[Translation missing --]]
-L["The space in pixels between each bar."] = "The space in pixels between each bar."
+L["The space in pixels between each bar."] = "每个条之间的像素间距."
 L["Tile Background"] = "背景色块"
 L["Tile Size"] = "色块大小"
 L["Whether or not to tile the background texture."] = "是否对背景材质使用色块."

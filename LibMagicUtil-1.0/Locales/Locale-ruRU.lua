@@ -1,30 +1,25 @@
 local L = LibStub("AceLocale-3.0"):NewLocale("LibMagicUtil-1.0", "ruRU")
 if not L then return end
 
--- To help localize LibMagicUtil-1.0 please enter phrase translations on the
--- following URL:
--- http://www.wowace.com/projects/libmagicutil-10/localization/
--- Exported localization is committed so parent addon packagers cannot replace it.
-
 L["Background Color"] = "Цвет фона"
 L["Background Frame"] = "Фоновая рамка"
 L["Background Texture"] = "Текстура фона"
 L["Bar Height"] = "Высота полосы"
 L["Bar Scale"] = "Масштаб полосы"
 L["Bar Size"] = "Размер полосы"
-L["Bar Spacing"] = "Промежуток полосы"
+L["Bar Spacing"] = "Расстояние между полосами"
 L["Bar Width"] = "Ширина полосы"
 L["Border color"] = "Цвет границы"
 L["Border Texture"] = "Текстура границы"
 L["Edge size"] = "Размер границы"
 L["Maximum number of bars"] = "Максимальное число полос"
 L["Number of pixels to insert between the background frame edge and the content."] = "Количество пикселей, вставляемое между границей рамки фона и содержимым."
-L["Padding"] = "Заполнение"
+L["Padding"] = "Отступ"
 L["The background texture used for the background frame."] = "Используемая текстура фона для рамки фона."
 L["The border texture used for the background frame."] = "Используемая текстура границы для рамки фона."
-L["The size in pixels of the background tiles."] = "Размер в пикселях "
-L["The space in pixels between each bar."] = ""
-L["Tile Background"] = "Фон мозаикой"
-L["Tile Size"] = "Размер мозаика"
-L["Whether or not to tile the background texture."] = "Будь или нет текстуру фона отображаться как элемент мозаичного изображения."
+L["The size in pixels of the background tiles."] = "Размер плиток фона в пикселях."
+L["The space in pixels between each bar."] = "Расстояние между полосами в пикселях."
+L["Tile Background"] = "Фон плиткой"
+L["Tile Size"] = "Размер плитки"
+L["Whether or not to tile the background texture."] = "Использовать ли текстуру фона в виде плитки."
 L["Width of the border."] = "Ширина границы."

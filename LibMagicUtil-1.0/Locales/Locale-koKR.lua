@@ -1,52 +1,25 @@
 local L = LibStub("AceLocale-3.0"):NewLocale("LibMagicUtil-1.0", "koKR")
 if not L then return end
 
--- To help localize LibMagicUtil-1.0 please enter phrase translations on the
--- following URL:
--- http://www.wowace.com/projects/libmagicutil-10/localization/
--- Exported localization is committed so parent addon packagers cannot replace it.
-
---[[Translation missing --]]
-L["Background Color"] = "Background Color"
---[[Translation missing --]]
-L["Background Frame"] = "Background Frame"
---[[Translation missing --]]
-L["Background Texture"] = "Background Texture"
---[[Translation missing --]]
-L["Bar Height"] = "Bar Height"
---[[Translation missing --]]
-L["Bar Scale"] = "Bar Scale"
---[[Translation missing --]]
-L["Bar Size"] = "Bar Size"
---[[Translation missing --]]
-L["Bar Spacing"] = "Bar Spacing"
---[[Translation missing --]]
-L["Bar Width"] = "Bar Width"
---[[Translation missing --]]
-L["Border color"] = "Border color"
---[[Translation missing --]]
-L["Border Texture"] = "Border Texture"
---[[Translation missing --]]
-L["Edge size"] = "Edge size"
---[[Translation missing --]]
-L["Maximum number of bars"] = "Maximum number of bars"
---[[Translation missing --]]
-L["Number of pixels to insert between the background frame edge and the content."] = "Number of pixels to insert between the background frame edge and the content."
---[[Translation missing --]]
-L["Padding"] = "Padding"
---[[Translation missing --]]
-L["The background texture used for the background frame."] = "The background texture used for the background frame."
---[[Translation missing --]]
-L["The border texture used for the background frame."] = "The border texture used for the background frame."
---[[Translation missing --]]
-L["The size in pixels of the background tiles."] = "The size in pixels of the background tiles."
---[[Translation missing --]]
-L["The space in pixels between each bar."] = "The space in pixels between each bar."
---[[Translation missing --]]
-L["Tile Background"] = "Tile Background"
---[[Translation missing --]]
-L["Tile Size"] = "Tile Size"
---[[Translation missing --]]
-L["Whether or not to tile the background texture."] = "Whether or not to tile the background texture."
---[[Translation missing --]]
-L["Width of the border."] = "Width of the border."
+L["Background Color"] = "배경 색상"
+L["Background Frame"] = "배경 프레임"
+L["Background Texture"] = "배경 텍스처"
+L["Bar Height"] = "바 높이"
+L["Bar Scale"] = "바 크기 비율"
+L["Bar Size"] = "바 크기"
+L["Bar Spacing"] = "바 간격"
+L["Bar Width"] = "바 너비"
+L["Border color"] = "테두리 색상"
+L["Border Texture"] = "테두리 텍스처"
+L["Edge size"] = "가장자리 크기"
+L["Maximum number of bars"] = "최대 바 개수"
+L["Number of pixels to insert between the background frame edge and the content."] = "배경 프레임 가장자리와 내용 사이에 삽입할 픽셀 수입니다."
+L["Padding"] = "여백"
+L["The background texture used for the background frame."] = "배경 프레임에 사용할 배경 텍스처입니다."
+L["The border texture used for the background frame."] = "배경 프레임에 사용할 테두리 텍스처입니다."
+L["The size in pixels of the background tiles."] = "배경 타일의 크기(픽셀)입니다."
+L["The space in pixels between each bar."] = "각 바 사이의 간격(픽셀)입니다."
+L["Tile Background"] = "배경 타일링"
+L["Tile Size"] = "타일 크기"
+L["Whether or not to tile the background texture."] = "배경 텍스처를 타일처럼 반복할지 여부입니다."
+L["Width of the border."] = "테두리의 두께입니다."

@@ -1,30 +1,25 @@
 local L = LibStub("AceLocale-3.0"):NewLocale("LibMagicUtil-1.0", "frFR")
 if not L then return end
 
--- To help localize LibMagicUtil-1.0 please enter phrase translations on the
--- following URL:
--- http://www.wowace.com/projects/libmagicutil-10/localization/
--- Exported localization is committed so parent addon packagers cannot replace it.
-
 L["Background Color"] = "Couleur de fond"
 L["Background Frame"] = "Cadre de fond"
 L["Background Texture"] = "Texture d'arrière-plan"
-L["Bar Height"] = "hauteur de la barre"
-L["Bar Scale"] = "échelle barre"
-L["Bar Size"] = "Taille barre"
-L["Bar Spacing"] = "Espace barre"
-L["Bar Width"] = "Largeur barre"
-L["Border color"] = "couleur contour"
-L["Border Texture"] = "Texture contour"
+L["Bar Height"] = "Hauteur de la barre"
+L["Bar Scale"] = "Échelle de la barre"
+L["Bar Size"] = "Taille de la barre"
+L["Bar Spacing"] = "Espacement des barres"
+L["Bar Width"] = "Largeur de la barre"
+L["Border color"] = "Couleur du contour"
+L["Border Texture"] = "Texture du contour"
 L["Edge size"] = "Taille des bords"
 L["Maximum number of bars"] = "Nombre maximal de barres"
 L["Number of pixels to insert between the background frame edge and the content."] = "Nombre de pixels à insérer entre le bord du fond du cadre et le contenu"
-L["Padding"] = "Attente"
-L["The background texture used for the background frame."] = "La texture de fond utilisée pour le châssis de base"
-L["The border texture used for the background frame."] = "La texture frontière utilisés pour le châssis de base"
+L["Padding"] = "Marge interne"
+L["The background texture used for the background frame."] = "La texture de fond utilisée pour le cadre de fond"
+L["The border texture used for the background frame."] = "La texture de contour utilisée pour le cadre de fond"
 L["The size in pixels of the background tiles."] = "La taille en pixels des carreaux de fond"
 L["The space in pixels between each bar."] = "L'espace en pixels entre chaque barre"
-L["Tile Background"] = "fond de tuile"
+L["Tile Background"] = "Mosaïque de fond"
 L["Tile Size"] = "Taille du carreau"
-L["Whether or not to tile the background texture."] = "Que ce soit ou non à la tuile de la texture de fond"
+L["Whether or not to tile the background texture."] = "Répéter ou non la texture de fond en mosaïque"
 L["Width of the border."] = "Largeur du contour"
