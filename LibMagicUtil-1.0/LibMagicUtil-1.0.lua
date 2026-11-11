@@ -45,7 +45,8 @@ local embeddables = {
    "GetConfigTemplate", "_GetColorOpt", "_SetColorOpt", "_SetOption", "_GetOption",
    "_HideOption", "_DisableTiling", "FixBackdrop", "_SetBackgroundOption",
    "InterfaceOptions_AddCategory", "InterfaceOptionsFrame_OpenToCategory", "Dump",
-   "GetSpellInfo", "UnitAura", "GetMailFrame"
+   "GetSpellInfo", "UnitAura", "GetMailFrame",
+   "StyleDialog", "CreateDialogWindow", "CreateDialogButton", "ShowConfirmDialog", "IsConfirmDialogShown"
 }
 
 lib.optionTemplates = lib.optionTemplates or {}
@@ -666,6 +667,223 @@ optionTemplates.barsize = {
       }, 
    }
 }
+
+----------------------------------------------------------------
+-- Dialog windows
+--
+-- Shared building blocks for addon windows: a framed dialog window and a
+-- yes/no confirmation with an optional checkbox. No strings live here;
+-- callers pass their own localized text.
+----------------------------------------------------------------
+
+local DIALOG_BACKDROP = {
+   bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+   edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+   tile = true, tileSize = 32, edgeSize = 32,
+   insets = { left = 11, right = 12, top = 12, bottom = 11 },
+}
+local BACKDROP_TEMPLATE = BackdropTemplateMixin and "BackdropTemplate" or nil
+
+--- Gives frame the standard dialog border. opaque adds a dark backing,
+--- since the dialog background alone is see-through enough to make text
+--- hard to read over the game world.
+function lib:StyleDialog(frame, opaque)
+   if frame.SetBackdrop then
+      frame:SetBackdrop(DIALOG_BACKDROP)
+   end
+   if opaque and not frame.dialogBacking then
+      local backing = frame:CreateTexture(nil, "BACKGROUND", nil, -8)
+      backing:SetPoint("TOPLEFT", 11, -11)
+      backing:SetPoint("BOTTOMRIGHT", -11, 11)
+      backing:SetColorTexture(0.04, 0.04, 0.06, 0.96)
+      frame.dialogBacking = backing
+   end
+end
+
+--- Creates a hidden, movable dialog window.
+---   name    global frame name (needed for escape)
+---   options (all optional):
+---     title       text for the title
+---     header      true: title on the classic dialog header plate,
+---                 otherwise a large title inside the top edge
+---     closeButton true: an X button in the corner that hides the window
+---     escape      false: don't close on escape (default closes)
+---     opaque      true: dark backing behind the content
+---     strata      frame strata (default "DIALOG")
+---     point       { point, relativeTo, relativePoint, x, y } (default centered)
+--- Returns the frame; frame.title and frame.closeButton when created.
+function lib:CreateDialogWindow(name, width, height, options)
+   options = options or {}
+   local frame = CreateFrame("Frame", name, UIParent, BACKDROP_TEMPLATE)
+   frame:SetSize(width, height)
+   if options.point then
+      frame:SetPoint(unpack(options.point))
+   else
+      frame:SetPoint("CENTER")
+   end
+   frame:SetFrameStrata(options.strata or "DIALOG")
+   frame:SetToplevel(true)
+   frame:SetClampedToScreen(true)
+   frame:EnableMouse(true)
+   frame:SetMovable(true)
+   frame:RegisterForDrag("LeftButton")
+   frame:SetScript("OnDragStart", frame.StartMoving)
+   frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
+   lib:StyleDialog(frame, options.opaque)
+   if name and options.escape ~= false then
+      tinsert(UISpecialFrames, name)
+   end
+
+   if options.title then
+      local title
+      if options.header then
+         local plate = frame:CreateTexture(nil, "ARTWORK")
+         plate:SetTexture("Interface\\DialogFrame\\UI-DialogBox-Header")
+         plate:SetSize(math.max(256, width * 0.6), 64)
+         plate:SetPoint("TOP", frame, "TOP", 0, 12)
+         title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+         title:SetPoint("TOP", plate, "TOP", 0, -14)
+         frame.headerPlate = plate
+      else
+         title = frame:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+         title:SetPoint("TOP", frame, "TOP", 0, -18)
+      end
+      title:SetText(options.title)
+      frame.title = title
+   end
+
+   if options.closeButton then
+      local close = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
+      close:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -6, -6)
+      close:SetScript("OnClick", function() frame:Hide() end)
+      frame.closeButton = close
+   end
+
+   frame:Hide()
+   return frame
+end
+
+--- A standard push button. height defaults to 24.
+function lib:CreateDialogButton(parent, text, width, onClick, height)
+   local button = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
+   button:SetSize(width or 130, height or 24)
+   button:SetText(text)
+   if onClick then button:SetScript("OnClick", onClick) end
+   return button
+end
+
+----------------------------------------------------------------
+-- Confirmation dialog
+----------------------------------------------------------------
+
+local confirmFrame
+
+local function FinishConfirm(accepted)
+   local request = confirmFrame.request
+   confirmFrame.request = nil
+   confirmFrame:Hide()
+   if not request then return end
+   if accepted then
+      if request.onAccept then request.onAccept(confirmFrame.checkbox:GetChecked() and true or false) end
+   elseif request.onCancel then
+      request.onCancel()
+   end
+end
+
+local function CreateConfirmFrame()
+   local frame = lib:CreateDialogWindow("LibMagicUtilConfirmDialog", 360, 140,
+      { point = { "TOP", UIParent, "TOP", 0, -135 } })
+
+   frame.icon = frame:CreateTexture(nil, "ARTWORK")
+   frame.icon:SetSize(36, 36)
+   frame.icon:SetPoint("TOPLEFT", frame, "TOPLEFT", 20, -18)
+
+   frame.text = frame:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+   frame.text:SetJustifyH("LEFT")
+   frame.text:SetJustifyV("TOP")
+
+   frame.checkbox = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
+   frame.checkbox:SetSize(24, 24)
+   frame.checkbox:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 20, 46)
+   local label = frame.checkbox.Text or frame.checkbox.text
+   if not label then
+      label = frame.checkbox:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+      label:SetPoint("LEFT", frame.checkbox, "RIGHT", 2, 0)
+   end
+   label:SetFontObject("GameFontHighlightSmall")
+   frame.checkboxLabel = label
+
+   frame.accept = lib:CreateDialogButton(frame, ACCEPT, 120, function() FinishConfirm(true) end, 22)
+   frame.accept:SetPoint("BOTTOMRIGHT", frame, "BOTTOM", -4, 18)
+   frame.cancel = lib:CreateDialogButton(frame, CANCEL, 120, function() FinishConfirm(false) end, 22)
+   frame.cancel:SetPoint("BOTTOMLEFT", frame, "BOTTOM", 4, 18)
+
+   -- Escape, or anything else hiding it, counts as cancel. Set after the
+   -- initial Hide so creating the frame doesn't cancel anything.
+   frame:SetScript("OnHide", function() if frame.request then FinishConfirm(false) end end)
+   return frame
+end
+
+--- Asks a yes/no question. Only one is shown at a time; a new one cancels
+--- the one already showing.
+---   options:
+---     text          the question
+---     acceptText    accept button label (default ACCEPT)
+---     cancelText    cancel button label (default CANCEL)
+---     checkboxText  shows a checkbox with this label (e.g. "Don't ask again")
+---     icon          texture path, or false for none (default alert icon)
+---     onAccept      function(checked) when accepted
+---     onCancel      function() when cancelled, escaped or replaced
+---     sound         false to stay silent
+function lib:ShowConfirmDialog(options)
+   confirmFrame = confirmFrame or lib.confirmFrame or CreateConfirmFrame()
+   lib.confirmFrame = confirmFrame
+   if confirmFrame.request then FinishConfirm(false) end
+
+   local frame = confirmFrame
+   local icon = options.icon
+   if icon == nil then icon = "Interface\\DialogFrame\\UI-Dialog-Icon-AlertNew" end
+   frame.text:ClearAllPoints()
+   if icon then
+      frame.icon:SetTexture(icon)
+      frame.icon:Show()
+      frame.text:SetPoint("TOPLEFT", frame.icon, "TOPRIGHT", 10, -2)
+   else
+      frame.icon:Hide()
+      frame.text:SetPoint("TOPLEFT", frame, "TOPLEFT", 24, -22)
+   end
+   frame.text:SetPoint("RIGHT", frame, "RIGHT", -22, 0)
+   frame.text:SetText(options.text or "")
+
+   frame.checkbox:SetChecked(false)
+   frame.checkbox:SetShown(options.checkboxText ~= nil)
+   frame.checkboxLabel:SetText(options.checkboxText or "")
+
+   frame.accept:SetText(options.acceptText or ACCEPT)
+   frame.cancel:SetText(options.cancelText or CANCEL)
+
+   -- grow to fit longer questions
+   local textHeight = frame.text:GetStringHeight() or 0
+   local extra = options.checkboxText and 28 or 0
+   frame:SetHeight(math.max(112, textHeight + 84 + extra))
+   frame.checkbox:ClearAllPoints()
+   frame.checkbox:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 20, 46)
+
+   frame.request = {
+      onAccept = options.onAccept,
+      onCancel = options.onCancel,
+   }
+   frame:Show()
+   frame:Raise()
+   if options.sound ~= false and PlaySound and SOUNDKIT and SOUNDKIT.IG_MAINMENU_OPEN then
+      PlaySound(SOUNDKIT.IG_MAINMENU_OPEN)
+   end
+end
+
+--- True while a confirmation is waiting for an answer.
+function lib:IsConfirmDialogShown()
+   return confirmFrame ~= nil and confirmFrame.request ~= nil
+end
 
 -- upgrade
 for addon in pairs(embeddedAddons) do
