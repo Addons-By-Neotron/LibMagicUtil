@@ -700,10 +700,16 @@ function lib:StyleDialog(frame, opaque)
    end
 end
 
--- The header plate is one stretched texture whose middle ~60% holds the
--- text, so it is sized to the title.
+-- Blizzard's DialogHeaderTemplate sizes itself to the text. Without it,
+-- the old header texture is one stretched image whose middle ~60% holds
+-- the text, so it is sized here.
 local function SetDialogTitle(frame, text)
-   frame.title:SetText(text or "")
+   text = text or ""
+   if frame.header then
+      frame.header:Setup(text)
+      return
+   end
+   frame.title:SetText(text)
    if frame.headerPlate then
       local textWidth = frame.title:GetStringWidth() or 0
       local plateWidth = math.max(256, (textWidth + 24) / 0.6)
@@ -748,7 +754,14 @@ function lib:CreateDialogWindow(name, width, height, options)
 
    if options.title then
       local title
-      if options.header then
+      local ok, header
+      if options.header and DialogHeaderMixin then
+         ok, header = pcall(CreateFrame, "Frame", nil, frame, "DialogHeaderTemplate")
+      end
+      if ok and header and header.Setup and header.Text then
+         frame.header = header
+         title = header.Text
+      elseif options.header then
          local plate = frame:CreateTexture(nil, "ARTWORK")
          plate:SetTexture("Interface\\DialogFrame\\UI-DialogBox-Header")
          plate:SetHeight(64)
