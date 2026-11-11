@@ -700,6 +700,17 @@ function lib:StyleDialog(frame, opaque)
    end
 end
 
+-- The header plate is one stretched texture whose middle ~60% holds the
+-- text, so it is sized to the title.
+local function SetDialogTitle(frame, text)
+   frame.title:SetText(text or "")
+   if frame.headerPlate then
+      local textWidth = frame.title:GetStringWidth() or 0
+      local plateWidth = math.max(256, (textWidth + 24) / 0.6)
+      frame.headerPlate:SetWidth(math.min(plateWidth, frame:GetWidth() - 40))
+   end
+end
+
 --- Creates a hidden, movable dialog window.
 ---   name    global frame name (needed for escape)
 ---   options (all optional):
@@ -711,7 +722,8 @@ end
 ---     opaque      true: dark backing behind the content
 ---     strata      frame strata (default "DIALOG")
 ---     point       { point, relativeTo, relativePoint, x, y } (default centered)
---- Returns the frame; frame.title and frame.closeButton when created.
+--- Returns the frame; frame.title and frame.closeButton when created, and
+--- frame:SetTitle(text) to change the title later.
 function lib:CreateDialogWindow(name, width, height, options)
    options = options or {}
    local frame = CreateFrame("Frame", name, UIParent, BACKDROP_TEMPLATE)
@@ -739,7 +751,7 @@ function lib:CreateDialogWindow(name, width, height, options)
       if options.header then
          local plate = frame:CreateTexture(nil, "ARTWORK")
          plate:SetTexture("Interface\\DialogFrame\\UI-DialogBox-Header")
-         plate:SetSize(math.max(256, width * 0.6), 64)
+         plate:SetHeight(64)
          plate:SetPoint("TOP", frame, "TOP", 0, 12)
          title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
          title:SetPoint("TOP", plate, "TOP", 0, -14)
@@ -748,8 +760,9 @@ function lib:CreateDialogWindow(name, width, height, options)
          title = frame:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
          title:SetPoint("TOP", frame, "TOP", 0, -18)
       end
-      title:SetText(options.title)
       frame.title = title
+      frame.SetTitle = SetDialogTitle
+      frame:SetTitle(options.title)
    end
 
    if options.closeButton then
