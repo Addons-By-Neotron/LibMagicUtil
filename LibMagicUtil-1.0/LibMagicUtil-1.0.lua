@@ -46,7 +46,8 @@ local embeddables = {
    "_HideOption", "_DisableTiling", "FixBackdrop", "_SetBackgroundOption",
    "InterfaceOptions_AddCategory", "InterfaceOptionsFrame_OpenToCategory", "Dump",
    "GetSpellInfo", "UnitAura", "GetMailFrame",
-   "StyleDialog", "CreateDialogWindow", "CreateDialogButton", "ShowConfirmDialog", "IsConfirmDialogShown"
+   "StyleDialog", "CreateDialogWindow", "CreateDialogButton", "ShowConfirmDialog", "IsConfirmDialogShown",
+   "ShowInputDialog", "IsInputDialogShown"
 }
 
 lib.optionTemplates = lib.optionTemplates or {}
@@ -909,6 +910,126 @@ end
 --- True while a confirmation is waiting for an answer.
 function lib:IsConfirmDialogShown()
    return confirmFrame ~= nil and confirmFrame.request ~= nil
+end
+
+----------------------------------------------------------------
+-- Text input dialog
+--
+-- Our own replacement for a StaticPopup with an edit box: StaticPopup
+-- dialogs are shared with Blizzard's UI, and showing one from addon code
+-- (or adding to StaticPopupDialogs) taints them.
+----------------------------------------------------------------
+
+local inputFrame
+
+-- Error message from the request's validator for the current text, or nil.
+local function InputError(frame)
+   local request = frame.request
+   if not (request and request.validate) then return nil end
+   return request.validate(frame.editBox:GetText())
+end
+
+local function UpdateInputState(frame)
+   local err = InputError(frame)
+   frame.error:SetText(type(err) == "string" and err or "")
+   frame.accept:SetEnabled(not err)
+end
+
+local function FinishInput(accepted)
+   local frame = inputFrame
+   local request = frame.request
+   if accepted and InputError(frame) then return end
+   local text = frame.editBox:GetText()
+   frame.request = nil
+   frame:Hide()
+   if not request then return end
+   if accepted then
+      if request.onAccept then request.onAccept(text) end
+   elseif request.onCancel then
+      request.onCancel()
+   end
+end
+
+local function CreateInputFrame()
+   local frame = lib:CreateDialogWindow("LibMagicUtilInputDialog", 360, 150,
+      { point = { "TOP", UIParent, "TOP", 0, -135 } })
+
+   frame.text = frame:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+   frame.text:SetPoint("TOPLEFT", frame, "TOPLEFT", 22, -20)
+   frame.text:SetPoint("RIGHT", frame, "RIGHT", -22, 0)
+   frame.text:SetJustifyH("LEFT")
+   frame.text:SetJustifyV("TOP")
+
+   local editBox = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
+   editBox:SetHeight(22)
+   editBox:SetPoint("TOPLEFT", frame.text, "BOTTOMLEFT", 6, -10)
+   editBox:SetPoint("RIGHT", frame, "RIGHT", -24, 0)
+   editBox:SetAutoFocus(false)
+   editBox:SetScript("OnTextChanged", function() UpdateInputState(frame) end)
+   editBox:SetScript("OnEnterPressed", function() FinishInput(true) end)
+   editBox:SetScript("OnEscapePressed", function() FinishInput(false) end)
+   frame.editBox = editBox
+
+   frame.error = frame:CreateFontString(nil, "ARTWORK", "GameFontRedSmall")
+   frame.error:SetPoint("TOPLEFT", editBox, "BOTTOMLEFT", -4, -4)
+   frame.error:SetPoint("RIGHT", frame, "RIGHT", -22, 0)
+   frame.error:SetJustifyH("LEFT")
+
+   frame.accept = lib:CreateDialogButton(frame, ACCEPT, 120, function() FinishInput(true) end, 22)
+   frame.accept:SetPoint("BOTTOMRIGHT", frame, "BOTTOM", -4, 18)
+   frame.cancel = lib:CreateDialogButton(frame, CANCEL, 120, function() FinishInput(false) end, 22)
+   frame.cancel:SetPoint("BOTTOMLEFT", frame, "BOTTOM", 4, 18)
+
+   -- Escape on the window, or anything else hiding it, counts as cancel.
+   frame:SetScript("OnHide", function() if frame.request then FinishInput(false) end end)
+   return frame
+end
+
+--- Asks for a line of text. Only one is shown at a time; a new one cancels
+--- the one already showing.
+---   options:
+---     text        the prompt
+---     default     initial text (selected, so typing replaces it)
+---     acceptText  accept button label (default ACCEPT)
+---     cancelText  cancel button label (default CANCEL)
+---     maxLetters  maximum length (default none)
+---     validate    function(text): nil when valid, otherwise an error
+---                 message (shown under the box) or true; accept is
+---                 disabled while it returns something
+---     onAccept    function(text) when accepted
+---     onCancel    function() when cancelled, escaped or replaced
+---     sound       false to stay silent
+function lib:ShowInputDialog(options)
+   inputFrame = inputFrame or lib.inputFrame or CreateInputFrame()
+   lib.inputFrame = inputFrame
+   if inputFrame.request then FinishInput(false) end
+
+   local frame = inputFrame
+   frame.text:SetText(options.text or "")
+   frame.accept:SetText(options.acceptText or ACCEPT)
+   frame.cancel:SetText(options.cancelText or CANCEL)
+   frame.editBox:SetMaxLetters(options.maxLetters or 0)
+   frame.request = {
+      validate = options.validate,
+      onAccept = options.onAccept,
+      onCancel = options.onCancel,
+   }
+   -- Grow to fit longer prompts.
+   frame:SetHeight(math.max(130, (frame.text:GetStringHeight() or 0) + 112))
+   frame:Show()
+   frame:Raise()
+   frame.editBox:SetText(options.default or "")
+   frame.editBox:HighlightText()
+   frame.editBox:SetFocus()
+   UpdateInputState(frame)
+   if options.sound ~= false and PlaySound and SOUNDKIT and SOUNDKIT.IG_MAINMENU_OPEN then
+      PlaySound(SOUNDKIT.IG_MAINMENU_OPEN)
+   end
+end
+
+--- True while an input dialog is waiting for an answer.
+function lib:IsInputDialogShown()
+   return inputFrame ~= nil and inputFrame.request ~= nil
 end
 
 -- upgrade
