@@ -842,10 +842,14 @@ end
 ---     acceptText    accept button label (default ACCEPT)
 ---     cancelText    cancel button label (default CANCEL)
 ---     checkboxText  shows a checkbox with this label (e.g. "Don't ask again")
+---     requireCheckbox  true: accept stays disabled until the checkbox is
+---                   checked (e.g. "I understand the risks")
 ---     icon          texture path, or false for none (default alert icon)
 ---     onAccept      function(checked) when accepted
 ---     onCancel      function() when cancelled, escaped or replaced
 ---     sound         false to stay silent
+---     strata        frame strata (default "FULLSCREEN_DIALOG", above
+---                   settings windows such as AceConfigDialog's)
 function lib:ShowConfirmDialog(options)
    confirmFrame = confirmFrame or lib.confirmFrame or CreateConfirmFrame()
    lib.confirmFrame = confirmFrame
@@ -869,6 +873,12 @@ function lib:ShowConfirmDialog(options)
    frame.checkbox:SetChecked(false)
    frame.checkbox:SetShown(options.checkboxText ~= nil)
    frame.checkboxLabel:SetText(options.checkboxText or "")
+   -- Set on every show: the frame may come from an older copy of the library.
+   local requireCheckbox = options.checkboxText ~= nil and options.requireCheckbox
+   frame.checkbox:SetScript("OnClick", function(check)
+      frame.accept:SetEnabled(not requireCheckbox or check:GetChecked())
+   end)
+   frame.accept:SetEnabled(not requireCheckbox)
 
    frame.accept:SetText(options.acceptText or ACCEPT)
    frame.cancel:SetText(options.cancelText or CANCEL)
@@ -884,6 +894,10 @@ function lib:ShowConfirmDialog(options)
       onAccept = options.onAccept,
       onCancel = options.onCancel,
    }
+   -- AceConfigDialog windows are FULLSCREEN_DIALOG at level 100, with
+   -- their widgets above that; a question asked from one must show on top.
+   frame:SetFrameStrata(options.strata or "FULLSCREEN_DIALOG")
+   frame:SetFrameLevel(500)
    frame:Show()
    frame:Raise()
    if options.sound ~= false and PlaySound and SOUNDKIT and SOUNDKIT.IG_MAINMENU_OPEN then
