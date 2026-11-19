@@ -433,53 +433,37 @@ local function IsTSMMailingVisible()
     return false
 end
 
--- Release builds of TSM don't name their frames (names are dev/test only), so
--- first try the named lookup, then fall back to finding TSM's top-level
--- application frame: every TSM widget carries a "__debug" table, and the
--- application frame is the large shown child of UIParent.
--- Examine one frame. Returns "named", "tsm" or "loose" (see ScanForTSMFrame),
--- or nil. Runs under pcall: some frames return secret values that error when
--- tested from addon code.
+-- TSM's mail window is a large shown top-level child of UIParent. Release
+-- builds don't name TSM frames (names are dev/test only), but every TSM widget
+-- carries a "__debug" table. Only UIParent's direct children are examined:
+-- walking every frame with EnumerateFrames() is slow enough on a big UI to
+-- trip the "script ran too long" limit.
+-- Returns "tsm" (named or __debug), "loose" (large shown frame) or nil.
+-- Runs under pcall: some frames return secret values that error when tested.
 local function ClassifyFrame(frame)
-    if frame:IsForbidden() then return nil end
+    if frame:IsForbidden() or not frame:IsShown() then return nil end
+    local w, h = frame:GetWidth() or 0, frame:GetHeight() or 0
+    if w < 300 or h < 200 then return nil end
     local name = frame:GetName()
-    if name and type(name) == "string" then
-        if name:match("^TSM_FRAME:MailsScrollTable:") then
-            local parent = frame:GetParent()
-            while parent and parent ~= UIParent and not parent:IsForbidden() do
-                local parentName = parent:GetName()
-                if parentName and type(parentName) == "string" and parentName:match("^TSM_FRAME:LargeApplicationFrame:") then
-                    return "named", parent
-                end
-                parent = parent:GetParent()
-            end
-        end
-        return nil
+    if type(name) == "string" and name:match("^TSM_FRAME:LargeApplicationFrame:") then
+        return "tsm"
     end
-    if frame:GetParent() == UIParent and frame:IsShown() then
-        local w, h = frame:GetWidth() or 0, frame:GetHeight() or 0
-        if w >= 300 and h >= 200 then
-            return frame.__debug and "tsm" or "loose", frame
-        end
-    end
-    return nil
+    return frame.__debug and "tsm" or "loose"
 end
 
 local function ScanForTSMFrame()
     local fallback, loose
-    local frame = EnumerateFrames()
-    while frame do
-        local ok, kind, found = pcall(ClassifyFrame, frame)
+    local children = { UIParent:GetChildren() }
+    for i = 1, #children do
+        local frame = children[i]
+        local ok, kind = pcall(ClassifyFrame, frame)
         if ok and kind then
-            if kind == "named" then
-                return found
-            elseif kind == "tsm" then
-                fallback = fallback or found
+            if kind == "tsm" then
+                fallback = fallback or frame
             else
-                loose = loose or found
+                loose = loose or frame
             end
         end
-        frame = EnumerateFrames(frame)
     end
     return fallback or loose
 end
