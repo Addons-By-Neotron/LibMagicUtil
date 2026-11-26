@@ -989,7 +989,8 @@ end
 ---     text        the prompt
 ---     default     initial text (selected, so typing replaces it)
 ---     acceptText  accept button label (default ACCEPT)
----     cancelText  cancel button label (default CANCEL)
+---     cancelText  cancel button label (default CANCEL), or false for no
+---                 cancel button (e.g. a box showing text to copy)
 ---     maxLetters  maximum length (default none)
 ---     validate    function(text): nil when valid, otherwise an error
 ---                 message (shown under the box) or true; accept is
@@ -1006,6 +1007,15 @@ function lib:ShowInputDialog(options)
    frame.text:SetText(options.text or "")
    frame.accept:SetText(options.acceptText or ACCEPT)
    frame.cancel:SetText(options.cancelText or CANCEL)
+   -- Without a cancel button, the accept button goes in the middle.
+   local noCancel = options.cancelText == false
+   frame.cancel:SetShown(not noCancel)
+   frame.accept:ClearAllPoints()
+   if noCancel then
+      frame.accept:SetPoint("BOTTOM", frame, "BOTTOM", 0, 18)
+   else
+      frame.accept:SetPoint("BOTTOMRIGHT", frame, "BOTTOM", -4, 18)
+   end
    frame.editBox:SetMaxLetters(options.maxLetters or 0)
    frame.request = {
       validate = options.validate,
